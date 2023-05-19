@@ -25,13 +25,12 @@ for device in compushady.get_discovered_devices():
         device.is_discrete,
     )
 
-
 buffer001 = Buffer(1024, HEAP_DEFAULT, stride=4)
 
 texture = Texture2D(1024, 1024, B8G8R8A8_UNORM)
 
 shader = """
-float multiplier : register(b0); // CBV 0
+float multiplier : register(b0);           // CBV 0
 RWBuffer<uint> destination : register(u0); // UAV 0
 RWTexture2D<float4> target : register(u1); // UAV 1
 RWBuffer<float3> positions : register(u2); // UAV 2
@@ -44,7 +43,8 @@ float mandlebrot(float2 xy)
     for(uint i = 0; i < max_iterations; i++)
     {
         z = float2(z.x * z.x - z.y * z.y, z.x * z.y * 2) + xy;
-        if (length(z) > multiplier * 2) return float(i) / max_iterations;
+        if (length(z) > multiplier * 2)
+            return float(i) / max_iterations;
     }
 
     return 1; // white
@@ -88,10 +88,14 @@ buffer001.copy_to(buffer002)
 print(buffer002.readback())
 
 buffer003 = Buffer(texture.size, HEAP_READBACK)
+
 texture.copy_to(buffer003)
+
 print(buffer003.readback(1024))
 
+
 glfw.init()
+
 glfw.window_hint(glfw.CLIENT_API, glfw.NO_API)
 
 window = glfw.create_window(texture.width, texture.height, "Compute Shader", None, None)
@@ -99,11 +103,13 @@ window = glfw.create_window(texture.width, texture.height, "Compute Shader", Non
 swapchain = Swapchain(glfw.get_win32_window(window), B8G8R8A8_UNORM, 3)
 
 value = 0
+
 while not glfw.window_should_close(window):
     glfw.poll_events()
     multiplier.upload(struct.pack('f', value))
     compute.dispatch(texture.width // 8, texture.height // 8, 1)
     swapchain.present(texture)
     value += 0.01
+
     if value > 1:
         value = 0
